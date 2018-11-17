@@ -42,7 +42,7 @@ import (
   "net/http"
 )
 
-func chain(handlers ...[]http.HandleFunc) http.HandleFunc {
+func chain(handlers ...[]http.HandlerFunc) http.HandlerFunc {
   // Combine all the handlers and return a single
   // handler that knows how to do what the constituent
   // handlers did.
