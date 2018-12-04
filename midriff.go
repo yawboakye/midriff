@@ -1,7 +1,9 @@
 package midriff
 
 import (
+	"log"
 	"net/http"
+	"time"
 )
 
 // Group is a group of middleware functions
@@ -10,10 +12,18 @@ import (
 type Group struct {
 	name  string
 	units []http.HandlerFunc
+	log   bool
 }
 
 // NewGroup returns a new middleware group.
 func NewGroup(name string) *Group { return &Group{name: name} }
+
+// Log toggles logging when executing the units in the group.
+// Depending on what time it is enabled, not all composition
+// will run with logging enabled. This is because `And` returns
+// different handlers depending on the value of log at the time
+// it was called.
+func (g *Group) Log(log bool) { g.log = log }
 
 // Append appends a new middleware function to the end
 // of the group.
@@ -38,6 +48,25 @@ func (g *Group) Extend(o *Group) {
 // of the request. The function is not appended to
 // the list.
 func (g *Group) And(f http.HandlerFunc) http.HandlerFunc {
+	if g.log {
+		return func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			log.Printf("started running units in %s", g.name)
+			defer log.Printf("units + handler completed in %v", time.Since(start))
+
+			for i, mw := range g.units {
+				start := time.Now()
+				log.Printf("\t[%s] running unit[%d] ...", g.name, i)
+				mw.ServeHTTP(w, r)
+				log.Printf("\t[%s] unit completed. elapsed: %v", g.name, time.Since(start))
+			}
+
+			log.Printf("all units in %s completed. elapsed: %v", g.name, time.Since(start))
+			log.Printf("running main handler ...")
+			f.ServeHTTP(w, r)
+		}
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		for _, mw := range g.units {
 			mw.ServeHTTP(w, r)
