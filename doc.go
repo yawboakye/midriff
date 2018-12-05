@@ -4,8 +4,8 @@
 
 /*
 Package midriff implements HTTP middleware.
-It provides facility for accummulating
+It provides facility for accumulating
 functions into a middleware group, as well
- as re-using one group in another.
+as re-using one group in another.
 */
 package midriff
