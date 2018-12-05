@@ -1,5 +1,7 @@
 ### Midriff
 
+[![GoDoc](https://godoc.org/github.com/yawboakye/midriff?status.svg)](https://godoc.org/github.com/yawboakye/midriff)
+
 Because we have to inspect requests before they reach our
 inner parts, and our response before they are sent out into
 the open, unforgiving world.
