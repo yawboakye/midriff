@@ -24,6 +24,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatalf("midriff_test: expected 0 units; got=%d instead", len(group.units))
 	}
 }
+
 func TestAppend(t *testing.T) {
 	group := NewGroup("test-append")
 	f := func(http.ResponseWriter, *http.Request) {}
@@ -50,6 +51,7 @@ func TestAppend(t *testing.T) {
 	}
 
 }
+
 func TestPrepend(t *testing.T) {
 	group := NewGroup("test-prepend")
 	f := func(http.ResponseWriter, *http.Request) {}
@@ -71,6 +73,7 @@ func TestPrepend(t *testing.T) {
 		}
 	}
 }
+
 func TestExtend(t *testing.T) {
 	basic := NewGroup("basic-group")
 	basicF := func(http.ResponseWriter, *http.Request) {}
@@ -96,6 +99,7 @@ func TestExtend(t *testing.T) {
 	}
 
 }
+
 func TestAnd(t *testing.T) {
 	respBody := "hello, world!"
 	group := NewGroup("test-and-group")
@@ -125,6 +129,29 @@ func TestAnd(t *testing.T) {
 	if string(body) != respBody {
 		t.Fatalf("expected handler to write %s as body; got=%s instead", respBody, string(body))
 	}
+}
+
+func TestLog(t *testing.T) {
+	group := NewGroup("test-log")
+	f := func(http.ResponseWriter, *http.Request) {}
+	h := func(http.ResponseWriter, *http.Request) {}
+
+	group.Log(false)
+	group.Append(f)
+	withoutLog := group.And(h)
+
+	// Enable logging
+	group.Log(true)
+	withLog := group.And(h)
+
+	if funcEqual(withoutLog, withLog) {
+		t.Fatalf("expected different functions but got the same")
+	}
+
+	// TODO(yawboakye): A more sophisticated way to test
+	// this function would be to configure a logger, and
+	// then check that data is written to it by the
+	// `withLog` function.
 }
 
 func funcEqual(f, g http.HandlerFunc) bool {

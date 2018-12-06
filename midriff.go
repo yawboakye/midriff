@@ -14,9 +14,11 @@ import (
 // that should be called sequentially, according
 // to their order of insertion.
 type Group struct {
-	name  string
-	units []http.HandlerFunc
-	log   bool
+	name       string
+	units      []http.HandlerFunc
+	log        bool
+	bundle     http.HandlerFunc
+	bundleSize int
 }
 
 // NewGroup returns a new middleware group.
@@ -52,29 +54,33 @@ func (g *Group) Extend(o *Group) {
 // of the request. The function is not appended to
 // the list.
 func (g *Group) And(f http.HandlerFunc) http.HandlerFunc {
+	if g.bundle == nil || g.bundleSize != len(g.units) {
+		// Let's build a bundle that we can keep re-using
+		// until new units are added.
+		g.bundle = func(w http.ResponseWriter, r *http.Request) {
+			for _, mw := range g.units {
+				mw.ServeHTTP(w, r)
+			}
+		}
+		g.bundleSize = len(g.units)
+	}
+
 	if g.log {
 		return func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
+
 			log.Printf("started running units in %s", g.name)
-			defer log.Printf("units + handler completed in %v", time.Since(start))
+			g.bundle(w, r)
+			log.Printf("[%s] all units completed. elapsed: %v", g.name, time.Since(start))
 
-			for i, mw := range g.units {
-				start := time.Now()
-				log.Printf("\t[%s] running unit[%d] ...", g.name, i)
-				mw.ServeHTTP(w, r)
-				log.Printf("\t[%s] unit completed. elapsed: %v", g.name, time.Since(start))
-			}
-
-			log.Printf("all units in %s completed. elapsed: %v", g.name, time.Since(start))
 			log.Printf("running main handler ...")
 			f.ServeHTTP(w, r)
+			log.Printf("[%s] units + handler completed in %v", g.name, time.Since(start))
 		}
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		for _, mw := range g.units {
-			mw.ServeHTTP(w, r)
-		}
+		g.bundle(w, r)
 		f.ServeHTTP(w, r)
 	}
 }
