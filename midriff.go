@@ -54,7 +54,7 @@ func (g *Group) Extend(o *Group) {
 // of the request. The function is not appended to
 // the list.
 func (g *Group) And(f http.HandlerFunc) http.HandlerFunc {
-	if g.bundle == nil || g.bundleSize != len(g.units) {
+	if g.bundleSize != len(g.units) {
 		// Let's build a bundle that we can keep re-using
 		// until new units are added.
 		g.bundle = func(w http.ResponseWriter, r *http.Request) {
