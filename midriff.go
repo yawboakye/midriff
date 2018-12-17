@@ -14,11 +14,11 @@ import (
 // that should be called sequentially, according
 // to their order of insertion.
 type Group struct {
+	log        bool
+	bundleSize int
 	name       string
 	units      []http.HandlerFunc
-	log        bool
 	bundle     http.HandlerFunc
-	bundleSize int
 }
 
 // NewGroup returns a new middleware group.
@@ -65,6 +65,10 @@ func (g *Group) And(f http.HandlerFunc) http.HandlerFunc {
 		g.bundleSize = len(g.units)
 	}
 
+	// WATCH: This is my Elixir side screaming for specific
+	// functions for specific things. The downside is that bad
+	// things can happen if log is toggled anywhere about from
+	// the start.
 	if g.log {
 		return func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
