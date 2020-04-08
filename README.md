@@ -78,8 +78,8 @@ func main() {
   basicGroup := midriff.NewGroup("json-api")
   basicGroup.Append(one, two, three, four)
 
-  mux.HandleFunc("/route1", group.And(handler1))
-  mux.HandleFunc("/route2", group.And(handler2))
+  mux.HandleFunc("/route1", basicGroup.And(handler1))
+  mux.HandleFunc("/route2", basicGroup.And(handler2))
 
   // A new group of middleware that extends
   // the basic middleware. It ensures that
