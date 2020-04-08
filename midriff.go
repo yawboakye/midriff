@@ -67,7 +67,7 @@ func (g *Group) And(f http.HandlerFunc) http.HandlerFunc {
 
 	// WATCH: This is my Elixir side screaming for specific
 	// functions for specific things. The downside is that bad
-	// things can happen if log is toggled anywhere about from
+	// things can happen if log is toggled anywhere apart from
 	// the start.
 	if g.log {
 		return func(w http.ResponseWriter, r *http.Request) {
